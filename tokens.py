@@ -68,15 +68,6 @@ def calculate_tokens(directory: str, method='tiktoken', model='gpt-3.5-turbo') -
 
 
 if __name__ == "__main__":
-    """
-    with open(sys.argv[1], 'r', encoding='utf-8') as f:
-        text = f.read()
-        print(f"Tokens (tiktoken): {calc_tokens(text, method='tiktoken', model='gpt-3.5-turbo')}")
-        print(f"Tokens (anthropic): {calc_tokens(text, method='anthropic')}")
-        print(f"Tokens (word): {calc_tokens(text, method='word')}")
-        print(f"Tokens (char): {calc_tokens(text, method='char')}")
-        # print(f"Tokens (unknown): {calc_tokens(text, method='unknown')}")
-        """
     token_stats = calculate_tokens(sys.argv[1], method='tiktoken', model='gpt-3.5-turbo')
 
     pprint(token_stats)
