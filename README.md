@@ -54,11 +54,11 @@ $$$
 $$$
 
 So, for 1000 articles (for the PoC demo), we will need in average:
+| Price     | Description                                        |
+|-----------|----------------------------------------------------|
+| 15 USD    | for 1000 articles (transcripts table)              |
+| 0.62 USD  | for 1000 articles (contentitems (content) table)   |
 
-+-----|-------------------------------------+
-| 15 USD |  for 1000 articles (transcripts table) | 
-| 0,62 USD  | for 1000 articles (contentitems (content) table) | 
-+-----|-------------------------------------+
 
 
 
