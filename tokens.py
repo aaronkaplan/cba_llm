@@ -4,10 +4,15 @@ for different LLM providers and tokenization methods.
 Also, this library provides helper functions for tokenizing a text (string)
 """
 
+import os
 import sys
 import re
 import tiktoken
 import voyageai
+
+import pandas as pd
+
+from pprint import pprint
 
 
 # Tokenization methods
@@ -34,11 +39,46 @@ def calc_tokens(text: str, method='tiktoken', model='gpt-3.5-turbo'):
         raise ValueError('Unknown tokenization method')
 
 
+def fetch_texts(directory: str) -> list[str]:
+    """
+    Fetch texts from a directory
+    :param directory: a string, the directory path
+    :return: a list of strings, the texts
+    """
+    texts = []
+    for filename in os.listdir(directory):
+        print(f"Reading file: {filename}")
+        if filename.endswith('.txt'):
+            with open(os.path.join(directory, filename), 'r', encoding='utf-8') as f:
+                texts.append(f.read())
+    return texts
+
+def calculate_tokens(directory: str, method='tiktoken', model='gpt-3.5-turbo') -> dict[str, int]:
+    """
+    Calculate the number of tokens in texts from a directory
+    :param directory: a string, the directory path
+    :param method: a string, the tokenization method
+    :return: a dictionary, the number of tokens in each text
+    """
+    texts = fetch_texts(directory)
+    tokens = {}
+    for i, text in enumerate(texts):
+        tokens[f'text_{i}'] = calc_tokens(text, method, model)
+    return tokens
+
+
 if __name__ == "__main__":
+    """
     with open(sys.argv[1], 'r', encoding='utf-8') as f:
         text = f.read()
-        print(f"Tokens (toktoken): {calc_tokens(text, method='tiktoken', model='gpt-3.5-turbo')}")
+        print(f"Tokens (tiktoken): {calc_tokens(text, method='tiktoken', model='gpt-3.5-turbo')}")
         print(f"Tokens (anthropic): {calc_tokens(text, method='anthropic')}")
         print(f"Tokens (word): {calc_tokens(text, method='word')}")
         print(f"Tokens (char): {calc_tokens(text, method='char')}")
         # print(f"Tokens (unknown): {calc_tokens(text, method='unknown')}")
+        """
+    token_stats = calculate_tokens(sys.argv[1], method='tiktoken', model='gpt-3.5-turbo')
+
+    pprint(token_stats)
+    df = pd.DataFrame(token_stats.items(), columns=['Text', 'Tokens'])
+    print(df.describe())
