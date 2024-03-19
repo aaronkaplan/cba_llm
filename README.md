@@ -45,7 +45,7 @@ min       8.000000
 max    2138.000000
 ```
 
-If we calculate that for OpenAI (tiktoken) for using the gpt-3.5-trubo model (see [princing](https://openai.com/pricing)) page), we will need 
+If we calculate that for OpenAI (tiktoken) for using the gpt-3.5-trubo model (see [pricing](https://openai.com/pricing)) page), we will need 
 
 gpt-3.5-turbo-0125	$0.50 / 1M tokens	$1.50 / 1M tokens
 
@@ -74,7 +74,7 @@ So, for 1000 articles (for the PoC demo), we will need in average:
 
 ### Claude 3 HAIKU model
 
-If we calculate that for Claude (voyageai) for using the Haiku model (see [princing](https://www.anthropic.com/api)) page), we will need 
+If we calculate that for Claude (voyageai) for using the Haiku model (see [pricing](https://www.anthropic.com/api)) page), we will need 
 
 haiku	$0.25 / 1M tokens	$1.25 / 1M tokens
 
