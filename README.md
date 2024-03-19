@@ -72,11 +72,11 @@ So, for 1000 articles (for the PoC demo), we will need in average:
 
 
 
-### Claude 3 AIKU
+### Claude 3 HAIKU model
 
-If we calculate that for Claude (voyageai) for using the Aiku model (see [princing](https://www.anthropic.com/api)) page), we will need 
+If we calculate that for Claude (voyageai) for using the Haiku model (see [princing](https://www.anthropic.com/api)) page), we will need 
 
-aiku	$0.25 / 1M tokens	$1.25 / 1M tokens
+haiku	$0.25 / 1M tokens	$1.25 / 1M tokens
 
 So, for 1000 articles (for the PoC demo), we will need in average:
 | Price     | Description                                        |
