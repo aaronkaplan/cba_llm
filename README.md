@@ -20,6 +20,7 @@ Result:
 
 ### Transcripts:
 ```
+| | | Tokens
 count    100.000000
 mean    7682.840000
 std     5185.550545
@@ -74,7 +75,7 @@ aiku	$0.25 / 1M tokens	$1.25 / 1M tokens
 So, for 1000 articles (for the PoC demo), we will need in average:
 | Price     | Description                                        |
 |-----------|----------------------------------------------------|
-| 11.52     | for 1000 articles (transcripts table)              |
+| 11.52 USD    | for 1000 articles (transcripts table)              |
 | 0.47 USD  | for 1000 articles (contentitems (content) table)   |
 
 
