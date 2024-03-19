@@ -53,7 +53,8 @@ Example calc for contentItems:
 311,277228 (average contentitem tokens) * 1000 (articles) /10^6*2  (price per 1 million tokens input + output)
 ```
 
-OpenAI GPT3.5 Turbo
+
+### OpenAI GPT3.5 Turbo
 
 So, for 1000 articles (for the PoC demo), we will need in average:
 | Price     | Description                                        |
@@ -62,7 +63,13 @@ So, for 1000 articles (for the PoC demo), we will need in average:
 | 0.62 USD  | for 1000 articles (contentitems (content) table)   |
 
 
-Claude AIKU
+
+
+If we calculate that for Claude (voyageai) for using the Aiku model (see [princing](https://www.anthropic.com/api)) page), we will need 
+
+aiku	$0.25 / 1M tokens	$1.25 / 1M tokens
+
+### Claude 3 AIKU
 
 So, for 1000 articles (for the PoC demo), we will need in average:
 | Price     | Description                                        |
