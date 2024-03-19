@@ -51,7 +51,7 @@ gpt-3.5-turbo-0125	$0.50 / 1M tokens	$1.50 / 1M tokens
 
 Example calc for contentItems:
 ```
-311,277228 (average contentitem tokens) * 1000 (articles) /10^6*2  (price per 1 million tokens input + output)
+311.277228 (average contentitem tokens) * 1000 (articles) /10^6*2  (price per 1 million tokens input + output)
 ```
 
 Example calc for transcripts:
