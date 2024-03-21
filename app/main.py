@@ -1,13 +1,14 @@
 """Main fastapi application."""
 
 
-from fastapi import FastAPI, Query, Request
+from datetime import datetime
+
+from fastapi import FastAPI
+from fastapi import Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from datetime import datetime
-from googletrans import Translator
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
