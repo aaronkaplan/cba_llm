@@ -1,43 +1,67 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Multilingual Search</title>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CBA Cross language Search</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-  </head>
-  <body>
+</head>
+<body>
     <section class="section">
-      <div class="container">
-        <div class="has-text-centered">
-          <img src="https://via.placeholder.com/150x150" alt="Cross Language Search Logo">
-          <h1 class="title">Cross Language Search</h1>
-          <form action="/search" method="get">
-            <div class="field has-addons">
-              <div class="control is-expanded">
-                <input class="input" type="text" name="query" placeholder="Search...">
-              </div>
-              <div class="control">
-                <button class="button is-primary">Search now...</button>
-              </div>
+        <div class="container">
+            <div class="has-text-centered">
+                <img src="/static/logo.png" alt="Cross language Search" style="max-width: 200px;">
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input class="input" type="text" placeholder="Search..." id="search-input">
+                    </div>
+                    <div class="control">
+                        <button class="button is-primary" onclick="searchArticles()">Search now...</button>
+                    </div>
+                </div>
             </div>
-          </form>
         </div>
-      </div>
     </section>
-    <hr/
     <section class="section">
-      <div class="container">
-        <div class="content">
-          <ul>
-            {% for result in results %}
-            <li>
-              <p>({{ result.date }}) <a href="{{ result.url }}">{{ result.title }}</a></p>
-              <p>{{ result.original_text }}</p>
-              <p>{{ result.translated_text }}</p>
-            </li>
-            {% endfor %}
-          </ul>
+        <div class="container">
+            <div id="search-results"></div>
         </div>
-      </div>
     </section>
-  </body>
+
+    <script>
+        async function searchArticles() {
+            const searchInput = document.getElementById('search-input');
+            const searchQuery = searchInput.value.trim();
+            if (searchQuery) {
+                const response = await fetch(`/search?query=${searchQuery}`);
+                const articles = await response.json();
+                renderArticles(articles);
+            }
+        }
+
+        function renderArticles(articles) {
+            const searchResults = document.getElementById('search-results');
+            searchResults.innerHTML = '';
+
+            if (articles.length === 0) {
+                searchResults.innerHTML = '<p>No results found.</p>';
+                return;
+            }
+
+            const articleList = document.createElement('ul');
+            articles.forEach(article => {
+                const articleItem = document.createElement('li');
+                articleItem.innerHTML = `
+                    <p>(${article.date}) <strong><a href="${article.url}">${article.title}</a></strong></p>
+                    <p>${article.original_text}</p>
+                    <p>${article.translated_text}</p>
+                    <p>&nbsp;</p>
+                    </li>
+                `;
+                articleList.appendChild(articleItem);
+            });
+            searchResults.appendChild(articleList);
+        }
+    </script>
+</body>
 </html>

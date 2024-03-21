@@ -34,14 +34,14 @@ def search(query: str = Query(..., min_length=1)) -> list[SearchResponse]:
     results = [
         {
             "url": "https://example.com/article1",
-            "date": datetime(2023, 4, 1),        # .isoformat(),
+            "date": datetime(2023, 4, 1).isoformat(),
             "title": "Article 1",
             "original_text": "This is the original text of article 1.",
             "translated_text": "Esto es el texto original del artículo 1."
         },
         {
             "url": "https://example.com/article2",
-            "date": datetime(2023, 3, 15),       # .isoformat(),
+            "date": datetime(2023, 3, 15).isoformat(),
             "title": "Article 2",
             "original_text": "This is the original text of article 2.",
             "translated_text": "Esto es el texto original del artículo 2."
