@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Multilingual Search</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <div class="has-text-centered">
+          <img src="https://via.placeholder.com/150x150" alt="Cross Language Search Logo">
+          <h1 class="title">Cross Language Search</h1>
+          <form action="/search" method="get">
+            <div class="field has-addons">
+              <div class="control is-expanded">
+                <input class="input" type="text" name="query" placeholder="Search...">
+              </div>
+              <div class="control">
+                <button class="button is-primary">Search now...</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    <hr/
+    <section class="section">
+      <div class="container">
+        <div class="content">
+          <ul>
+            {% for result in results %}
+            <li>
+              <p>({{ result.date }}) <a href="{{ result.url }}">{{ result.title }}</a></p>
+              <p>{{ result.original_text }}</p>
+              <p>{{ result.translated_text }}</p>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
