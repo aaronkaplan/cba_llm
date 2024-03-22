@@ -5,4 +5,5 @@ uvicorn
 python-multipart
 pydantic
 jinja2
-googletrans
+pytest
+langchainhub
