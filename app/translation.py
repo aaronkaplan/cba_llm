@@ -1,6 +1,10 @@
 """Simple module to translate a string in a language to the reference language (english)"""
 
 
+
+from langchain import hub
+
+
 def translate(text: str, dest: str = 'en') -> str:
     """Translate a string to the reference language (english)
 
@@ -11,6 +15,10 @@ def translate(text: str, dest: str = 'en') -> str:
     Returns:
     str -- the translated string
     """
+
+    # first get the right prompt
+    obj = hub.pull("patrickmosby/translator")
+
+    print(obj)
+
     return "foo"
-
-
