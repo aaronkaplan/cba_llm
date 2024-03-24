@@ -2,11 +2,15 @@
 
 
 # from pydantic import BaseModel, Field
+import os
+import logging
 
 from langchain import hub
 from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.output_parsers import JsonOutputParser
+
+from langchain_anthropic import ChatAnthropic
 
 class Translation(BaseModel):
     """Pydantic class to represent a translation result."""
@@ -32,9 +36,16 @@ def translate(src_text: str, dst_language: str = 'english') -> str:
 
 
     # first initialize the connectoin to  the llm 
-    model = ChatOpenAI(model='gpt-3.5-turbo', temperature=0)
+    if os.getenv('LLM_PROVIDER').lower() == 'openai':
+        logging.info("Using OpenAI")
+        model = ChatOpenAI(model='gpt-3.5-turbo', temperature=0)
+    elif os.getenv('LLM_PROVIDER').lower() == 'anthropic':
+        logging.info("Using Claude (Anthropic)")
+        model = ChatAnthropic(model="claude-3-haiku-20240307", temperature=0)
+    else:
+        raise ValueError("Unknown LLM_PROVIDER")
     output_parser = JsonOutputParser(pydantic_object=Translation)
-
+    print(f"{output_parser.get_format_instructions()=}")
     # first get the input language
     # XXX detect the input language and set the input_language variable
     # ... here we could make another prompt which detect the input language
@@ -44,11 +55,13 @@ def translate(src_text: str, dst_language: str = 'english') -> str:
 
     # nowfirst get the right prompt
     prompt = hub.pull("aaronkaplan/basic_translation")
-    prompt = prompt.partial(format_instructions=output_parser.get_format_instructions())
+    data = {"src_text": src_text, "dst_language": dst_language}
+
+    # prompt = prompt.partial(format_instructions=output_parser.get_format_instructions())
     chain = prompt | model | output_parser
 
     # now use the llm with the prompt to translate the text
-    result = chain.invoke({"src_text": src_text, "dst_language": dst_language})
+    result = chain.invoke(data)
 
     translation = Translation({'src_text': src_text,
                                'dst_text': result['translated_text'], 
@@ -56,3 +69,6 @@ def translate(src_text: str, dst_language: str = 'english') -> str:
                                'dst_language': dst_language})
     return translation.dst_text
 
+
+if __name__ == "__main__":
+    print(translate("Esto es una prueba", dst_language="english"))
