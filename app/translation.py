@@ -23,7 +23,7 @@ class Translation(BaseModel):
         super().__init__(**data)
 
 
-def translate(src_text: str, dst_language: str = 'english') -> str:
+def translate(src_text: str, dst_language: str = 'english', _src_language: str = None) -> str:
     """Translate a string to the reference language (english)
 
     Arguments:
@@ -45,7 +45,7 @@ def translate(src_text: str, dst_language: str = 'english') -> str:
     else:
         raise ValueError("Unknown LLM_PROVIDER")
     output_parser = JsonOutputParser(pydantic_object=Translation)
-    print(f"{output_parser.get_format_instructions()=}")
+    # print(f"{output_parser.get_format_instructions()=}")
     # first get the input language
     # XXX detect the input language and set the input_language variable
     # ... here we could make another prompt which detect the input language
