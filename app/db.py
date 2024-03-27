@@ -266,6 +266,8 @@ if __name__ == "__main__":
                     print(f"ID: {id}, url: {url}")
                     print(f"{translated_text=}")
                     print(80*"/")
+                else:
+                    translated_text = text
                 # now add the document to the vector database
                 collection.add(documents=[text, translated_text],
                     metadatas=[{"language": src_language, "url": url}, {"language": dst_language, "url": url}],
