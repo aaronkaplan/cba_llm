@@ -1,4 +1,4 @@
-"""Functions for interacting with the database.
+r"""Functions for interacting with the database.
 
 We have the following tables in the database which we want to interact with:
 
@@ -20,18 +20,18 @@ repco=# \d "Transcript"
                                  Table "public.ContentItem"
         Column         |              Type              | Collation | Nullable |   Default   
 -----------------------+--------------------------------+-----------+----------+-------------
- uid                   | text                           |           | not null | 
+ uid                   | text                           |           | not null | <-- 
  revisionId            | text                           |           | not null | 
- subtitle              | text                           |           |          | 
- pubDate               | timestamp(3) without time zone |           |          | 
+ subtitle              | text                           |           |          | <-- 
+ pubDate               | timestamp(3) without time zone |           |          | <-- 
  contentFormat         | text                           |           | not null | 
  primaryGroupingUid    | text                           |           |          | 
  licenseUid            | text                           |           |          | 
  publicationServiceUid | text                           |           |          | 
- title                 | jsonb                          |           | not null | '{}'::jsonb
+ title                 | jsonb                          |           | not null | '{}'::jsonb <--
  summary               | jsonb                          |           |          | 
- content               | jsonb                          |           | not null | '{}'::jsonb
- contentUrl            | text                           |           | not null | 
+ content               | jsonb                          |           | not null | '{}'::jsonb <--
+ contentUrl            | text                           |           | not null |  <--
  originalLanguages     | jsonb                          |           |          | 
 
  
@@ -211,7 +211,16 @@ class DB():
 
 
 def combine_content_item_colums(content_item: ContentItem) -> str:
-    """Combine the columns of a content item into a single string."""
+    """Combine the columns of a content item into a single string.
+    This combines the title, subtitle, summary, and content columns into a single string and 
+    cleans it up (html tags get removed).
+
+    Example input:
+      content_item = {   'uid': 'eay', "summary": {"de": {"value": "<H1>Zusammenfassung</h1>"}}, "content": {"de": {"value": "Inhalt"}}, "title": {"de": {"value": "Beispiel Titel"}}}
+    Output:
+      "Beispiel Titel Zusammenfassung Inhalt"
+
+    """
     combined = ""
     # for key in ['title', 'subtitle', 'summary', 'content']:       # FIXME: subtitle needs to be cleaned up in the DB
     for key in [8,9,10]:        # pretty unelegant, but it works
@@ -241,7 +250,7 @@ if __name__ == "__main__":
 
     # print(combine_content_item_colums(row[0]))
     # sys.exit(0)
-    rows = db.fetch_random_content_items(10)
+    rows = db.fetch_random_content_items(100)
     pprint(rows)
     # XXX FIXME: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes . 
     # But it would be better to get them from the official source
