@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory="templates")
 
 class SearchResponse(BaseModel):
     """Search response model."""
-    date: datetime
+    date: str
     url: str
     title: str
     original_text: str
@@ -44,14 +44,14 @@ def search_in_vectorsearchDB(text: str, count_answers: int = -1) -> list[SearchR
     results = [
         {
             "url": "https://example.com/article1",
-            "date": datetime(2023, 4, 1),
+            "date": "2023/4/1",
             "title": "Article 1",
             "original_text": "This is the original text of article 1.",
             "translated_text": "Esto es el texto original del artículo 1."
         },
         {
             "url": "https://example.com/article2",
-            "date": datetime(2023, 3, 15),
+            "date": "2023/3/15",
             "title": "Article 2",
             "original_text": "This is the original text of article 2.",
             "translated_text": "Esto es el texto original del artículo 2."
