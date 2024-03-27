@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CBA Cross language Search</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.1/css/all.css">
 </head>
 <body>
     <section class="section">
@@ -19,12 +19,13 @@
                         <p>&nbsp;</p>
                         <div class="field has-addons">
                             <div class="control is-expanded">
-                                <input class="input is-rounded" type="text" placeholder="Search..." id="search-input">
+                                <input class="input is-rounded" type="text" placeholder="Search..." id="search-input" autofocus>
                             </div>
                             <div class="control">
                                 <button class="button is-primary is-rounded" style="background-color:#006C9B" onclick="searchArticles()">
-                                    <span class="icon is-large fas ">
-                                        <i class="fas fa-search  icon fa-inverse"></i>
+                                    <span class="icon is-large fas is-centered centered">
+                                        <!-- <i class="fas fa-search  icon fa-inverse is-centered"></i>  -->
+                                        <i class="fa-solid fa-magnifying-glass fa-inverse"></i> 
                                     </span>
                                 </button>
                             </div>
@@ -36,12 +37,13 @@
                         </div>
                     </div>
                     </div>
+                    <section>&nbsp;</section>
                     <div class="is-left has-text-left">
-                        <section class="section">
+                        <!-- <section class="section"> -->
                             <div class="container">
                                 <div id="search-results"></div>
                             </div>
-                        </section>
+                        <!-- </section> -->
                     </div>
                 </div>
             </div>
@@ -88,6 +90,16 @@
             });
             searchResults.appendChild(articleList);
         }
+    
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchArticles();
+                }
+            });
+         });
+
     </script>
 </body>
 </html>
