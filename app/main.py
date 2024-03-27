@@ -10,6 +10,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from langdetect import detect   # https://www.geeksforgeeks.org/detect-an-unknown-language-using-python/
+
+from app.translation import translate
+
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -63,6 +68,13 @@ def search_in_vectorsearchDB(text: str, count_answers: int = -1) -> list[SearchR
 
 @app.get("/search", response_model=list[SearchResponse])
 def search(query: str = Query(..., min_length=1)) -> list[SearchResponse]:
+    # first detect the input language
+    lang = detect(query)
+    print(f"Detected language: {lang}")
+    if lang != "en":
+        query = translate(query, dst_language="english")
+    print(f"(Translated) query: {query}")
+
     # Simulate some search results , in reality this will go to a RAG system
     results = search_in_vectorsearchDB(query)
 
