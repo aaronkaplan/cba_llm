@@ -4,19 +4,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CBA Cross language Search</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css">
 </head>
 <body>
     <section class="section">
         <div class="container">
             <div class="has-text-centered">
-                <img src="/static/logo.png" alt="Cross language Search" style="max-width: 200px;">
+                <p>&nbsp;</p>
+                <img src="/static/logo1.png" alt="Cross language Search" style="max-width: 200px;">
+                <p>&nbsp;</p>
                 <div class="field has-addons">
                     <div class="control is-expanded">
-                        <input class="input" type="text" placeholder="Search..." id="search-input">
+                        <input class="input is-rounded" type="text" placeholder="Search..." id="search-input">
                     </div>
                     <div class="control">
-                        <button class="button is-primary" onclick="searchArticles()">Search now...</button>
+                        <button class="button is-primary is-rounded" style="background-color:#006C9B" onclick="searchArticles()">
+                            <span class="icon is-large fas ">
+                                <i class="fas fa-search  icon fa-inverse"></i>
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -52,10 +59,16 @@
             articles.forEach(article => {
                 const articleItem = document.createElement('li');
                 articleItem.innerHTML = `
-                    <p>(${article.date}) <strong><a href="${article.url}">${article.title}</a></strong></p>
+                    <p>(${article.date}) </p>
+                    <p><strong><font size=+1><a href="${article.url}">${article.title}</a></font></strong></p>
+                    <p>&nbsp;</p>
+                    <p><i>Original:</i></p>
                     <p>${article.original_text}</p>
+                    <p>&nbsp;</p>
+                    <p><i>Translated:</i></p>
                     <p>${article.translated_text}</p>
                     <p>&nbsp;</p>
+                    <hr/>
                     </li>
                 `;
                 articleList.appendChild(articleItem);
