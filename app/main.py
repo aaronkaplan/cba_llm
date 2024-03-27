@@ -29,25 +29,42 @@ def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.get("/search", response_model=list[SearchResponse])
-def search(query: str = Query(..., min_length=1)) -> list[SearchResponse]:
+def search_in_vectorsearchDB(text: str, count_answers: int = -1) -> list[SearchResponse]:
+    """Search in the vector search database using langchain and chromaDB.
+    
+    Arguments:
+    text -- the text to search for
+    count_answers -- the number of answers to return. -1 means all
+
+    Returns:
+    list[SearchResponse] -- the search results
+    """
+
     # Simulate some search results , in reality this will go to a RAG system
     results = [
         {
             "url": "https://example.com/article1",
-            "date": datetime(2023, 4, 1).isoformat(),
+            "date": datetime(2023, 4, 1),
             "title": "Article 1",
             "original_text": "This is the original text of article 1.",
             "translated_text": "Esto es el texto original del artículo 1."
         },
         {
             "url": "https://example.com/article2",
-            "date": datetime(2023, 3, 15).isoformat(),
+            "date": datetime(2023, 3, 15),
             "title": "Article 2",
             "original_text": "This is the original text of article 2.",
             "translated_text": "Esto es el texto original del artículo 2."
         }
     ]
+
+    return results
+
+
+@app.get("/search", response_model=list[SearchResponse])
+def search(query: str = Query(..., min_length=1)) -> list[SearchResponse]:
+    # Simulate some search results , in reality this will go to a RAG system
+    results = search_in_vectorsearchDB(query)
 
     # Translate the results using the Google Translate API
     # translator = Translator()
