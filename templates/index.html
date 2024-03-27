@@ -9,29 +9,42 @@
 </head>
 <body>
     <section class="section">
-        <div class="container">
-            <div class="has-text-centered">
-                <p>&nbsp;</p>
-                <img src="/static/logo.png" alt="Cross language Search" style="max-width: 200px;">
-                <p>&nbsp;</p>
-                <div class="field has-addons">
-                    <div class="control is-expanded">
-                        <input class="input is-rounded" type="text" placeholder="Search..." id="search-input">
+        <!-- space bulma grid so that the following container takes 4/5th of the space and is centered -->
+        <div class="columns is-centered">
+            <div class="column is-three-quarters">
+                <div class="container">
+                    <div class="has-text-centered">
+                        <p>&nbsp;</p>
+                        <img src="/static/logo.png" alt="Cross language Search" style="max-width: 200px;">
+                        <p>&nbsp;</p>
+                        <div class="field has-addons">
+                            <div class="control is-expanded">
+                                <input class="input is-rounded" type="text" placeholder="Search..." id="search-input">
+                            </div>
+                            <div class="control">
+                                <button class="button is-primary is-rounded" style="background-color:#006C9B" onclick="searchArticles()">
+                                    <span class="icon is-large fas ">
+                                        <i class="fas fa-search  icon fa-inverse"></i>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="has-text-grey">
+                                Search all CBA articles in your language of choice. Get the original and translated text side by side.
+                            </p>
+                        </div>
                     </div>
-                    <div class="control">
-                        <button class="button is-primary is-rounded" style="background-color:#006C9B" onclick="searchArticles()">
-                            <span class="icon is-large fas ">
-                                <i class="fas fa-search  icon fa-inverse"></i>
-                            </span>
-                        </button>
+                    </div>
+                    <div class="is-left has-text-left">
+                        <section class="section">
+                            <div class="container">
+                                <div id="search-results"></div>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-    <section class="section">
-        <div class="container">
-            <div id="search-results"></div>
         </div>
     </section>
 
@@ -59,7 +72,7 @@
             articles.forEach(article => {
                 const articleItem = document.createElement('li');
                 articleItem.innerHTML = `
-                    <p>(${article.date}) </p>
+                    <p><font size=-2>(${article.date})</font></p>
                     <p><strong><font size=+1><a href="${article.url}">${article.title}</a></font></strong></p>
                     <p>&nbsp;</p>
                     <p><i>Original:</i></p>
