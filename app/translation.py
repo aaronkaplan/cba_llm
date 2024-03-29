@@ -17,11 +17,14 @@ class Translation(BaseModel):
     src_text: str =  Field(description="The original text to translate")
     dst_text: str = Field(description="The translated text")
     src_language: str = Field(description="The original language of the text", required=False)
-    dst_language:  str = Field(description="The language the text was translated to")
+    dst_language:  str = Field(description="The language the text was translated to", required=False)
 
     def __init__(self, data):
         super().__init__(**data)
-
+        if 'src_language' not in data:
+            self.src_language = "de"        # safe assumption
+        if 'dst_language' not in data:
+            self.dst_language = "en"        # safe assumption
 
 def translate(src_text: str, dst_language: str = 'english', _src_language: str = None) -> str:
     """Translate a string to the reference language (english)
@@ -38,7 +41,8 @@ def translate(src_text: str, dst_language: str = 'english', _src_language: str =
     # first initialize the connectoin to  the llm 
     if os.getenv('LLM_PROVIDER').lower() == 'openai':
         logging.info("Using OpenAI")
-        model = ChatOpenAI(model='gpt-3.5-turbo', temperature=0)
+        model = ChatOpenAI(model='gpt-3.5-turbo', temperature=0 )
+        # model = model.with_structured_output(schema=Translation, method="json_mode")      # this is currently broken in langchain 0.1.13
     elif os.getenv('LLM_PROVIDER').lower() == 'anthropic':
         logging.info("Using Claude (Anthropic)")
         model = ChatAnthropic(model="claude-3-haiku-20240307", temperature=0)
@@ -63,10 +67,15 @@ def translate(src_text: str, dst_language: str = 'english', _src_language: str =
     # now use the llm with the prompt to translate the text
     result = chain.invoke(data)
 
-    translation = Translation({'src_text': src_text,
-                               'dst_text': result['translated_text'], 
-                               'src_language': result['src_language'],
-                               'dst_language': dst_language})
+    try:
+        translation = Translation({'src_text': src_text,
+                                'dst_text': result['dst_text'], 
+                                'src_language': result['src_language'],
+                                'dst_language': dst_language})
+    except Exception as e:
+        logging.error(f"Translation failed: {e}")
+        logging.error(f"LLM result: {result}")
+        raise e
     return translation.dst_text
 
 

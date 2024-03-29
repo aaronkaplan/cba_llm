@@ -25,7 +25,7 @@ class SearchResponse(BaseModel):
     url: str
     title: str
     original_text: str
-    translated_text: str
+    dst_text: str
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -52,14 +52,14 @@ def search_in_vectorsearchDB(text: str, count_answers: int = -1) -> list[SearchR
             "date": "2023/4/1",
             "title": "Article 1",
             "original_text": "This is the original text of article 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-            "translated_text": "Esto es el texto original del artículo 1."
+            "dst_text": "Esto es el texto original del artículo 1."
         },
         {
             "url": "https://example.com/article2",
             "date": "2023/3/15",
             "title": "Article 2",
             "original_text": "This is the original text of article 2.",
-            "translated_text": "Esto es el texto original del artículo 2."
+            "dst_text": "Esto es el texto original del artículo 2."
         }
     ]
 
@@ -82,6 +82,6 @@ def search(query: str = Query(..., min_length=1)) -> list[SearchResponse]:
     # translator = Translator()
     # for result in results:
     #     print(result["original_text"])
-    #     result["translated_text"] = translator.translate(result["original_text"], dest="es").text
+    #     result["dst_text"] = translator.translate(result["original_text"], dest="es").text
 
     return results

@@ -78,6 +78,8 @@ Concept
 """
 
 import sys
+import logging
+
 from typing import List
 from pprint import pprint
 
@@ -188,8 +190,11 @@ class DB():
         sql = 'SELECT * FROM "ContentItem" ORDER BY pubDate DESC'
         return self.query(sql, {})
 
-    def fetch_random_content_items(self, limit: int = 0) -> List[ContentItem]:
+    def fetch_random_content_items(self, limit: int = 0, seed: float = None) -> List[ContentItem]:
         """Fetch random content items."""
+        if seed:
+            sql = f'SELECT setseed({seed});'
+            _result = self.query(sql, seed)
         if limit > 0:
             sql = f'SELECT {CONTENTITEM_FIELDS} FROM "ContentItem" ORDER BY RANDOM() LIMIT %s'''
             return self.query(sql, (limit,))
@@ -238,8 +243,10 @@ if __name__ == "__main__":
 
     chroma_client = chromadb.PersistentClient(path="./chroma.db")
     collection = chroma_client.get_or_create_collection(name="ContentItems")
-    print(f"{collection.count()=}")
+    logging.info(f"{collection.count()=}")
 
+    # make a pandas df for collecting all the data which gets stored into the vector database
+    df_content_items = pd.DataFrame(columns=["id", "url", "pubDate", "title", "text", "dst_text"])
 
     db = DB()   # the postgresql DB
     df = db.stats_content_items()
@@ -250,14 +257,18 @@ if __name__ == "__main__":
 
     # print(combine_content_item_colums(row[0]))
     # sys.exit(0)
-    rows = db.fetch_random_content_items(100)
+    rows = db.fetch_random_content_items(10)
     pprint(rows)
     # XXX FIXME: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes . 
     # But it would be better to get them from the official source
     LANGUAGES =  ['de', 'en', 'pl', 'sl', 'fa', 'hu', 'es', 'ar', 'fr', 'ru', 'it', 'sv', 'sq', 'lt', 'bs', 'zh', 'tr', 'bg', 'ku', 'cs', 'hr', 'pt', 'az', 'no', 'da', 'et', 'el', 'so', 'sk', 'sr', 'nl', 'uk', 'ro', 'ca', 'lv', 'an', 'be', 'mk', 'fi', 'th', 'ce', 'am', 'is', 'cy', 'mC', 'rm', 'ur', 'si', 'he', 'ko', 'yi', 'tu', 'ja']
 
 
-    pprint(rows)
+    # pprint(rows)
+    
+
+    logging.info("Starting to translate the content items")
+    print(10 * "\n")
     for row in tqdm(rows):
         for language in LANGUAGES:
             if language in row[9]:      # example: row[9] is {'de': {'value': 'text in German'}}
@@ -266,20 +277,50 @@ if __name__ == "__main__":
                 dst_language = 'en'
                 id = row[0]
                 url = row[11]
+                pubDate = str(row[3].date())
+                for language in LANGUAGES:
+                    if language in row[8]:
+                        title = row[8][language]['value']
+                    else:
+                        title = ''
+                pprint(f"{text=}, {src_language=}, {dst_language=}, {id=}, {url=}, {pubDate=}, {title=}")
                 print(f"{src_language=}")
                 print(f"{dst_language=}")
                 print(f"{text=}")
                 if src_language != dst_language:
-                    translated_text = translate(src_text = text, dst_language=dst_language, _src_language=src_language)
+                    dst_text = translate(src_text = text, dst_language=dst_language, _src_language=src_language)
                     print(80*"=")
                     print(f"ID: {id}, url: {url}")
-                    print(f"{translated_text=}")
+                    print(f"{text[0:20]=}")
+                    print(f"{type(text)=}")
+                    print(f"{dst_text=}")
+                    print(f"{type(dst_text)=}")
                     print(80*"/")
                 else:
-                    translated_text = text
-                # now add the document to the vector database
-                collection.add(documents=[text, translated_text],
-                    metadatas=[{"language": src_language, "url": url}, {"language": dst_language, "url": url}],
-                    ids=[row[0], row[0]+"_en"])
+                    dst_text = ''
+                    # now add the document to the vector database
+                collection.add(documents=[text, dst_text],
+                               metadatas=[{"title": title, "date": pubDate, "language": src_language, "url": url}, 
+                               {"title": title, "date": pubDate, "language": dst_language, "url": url}],
+                               ids=[row[0], row[0]+"_en"])
+                # append the data to the pandas df_content_items
+                df2 = pd.DataFrame({"id": id, "url": url, 
+                                    "pubDate": pubDate, "title": title, "text": text, 
+                                    "dst_text": dst_text}, index=[0]) 
+                df_content_items = pd.concat([df_content_items, df2], ignore_index=True)
+                # df_content_items.loc[len(df_content_items)] = [id, url, pubDate, title, text, dst_text]
+                """
+                df_content_items = df_content_items.append({"id": id, "url": url, 
+                                                            "pubDate": pubDate, "title": title, 
+                                                            "text": text, 
+                                                            "dst_text": dst_text}, 
+                                                            ignore_index=True)
+                """
                 break
     db.close()
+
+    # finally write the df_content_items to an XLSX file via pandas:
+    df_content_items.to_excel("content_items.xlsx", index=False)
+    print("Data written to content_items.xksx")
+    print(df_content_items.head())
+
