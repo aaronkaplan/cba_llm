@@ -1,3 +1,6 @@
+[![Pycodestyle](https://github.com/aaronkaplan/cba_llm/actions/workflows/pycodestyle.yml/badge.svg)](https://github.com/aaronkaplan/cba_llm/actions/workflows/pycodestyle.yml)
+
+
 # cba_llm
 proof of concept multi-lingual RAG and LLM system for CBA / displayeurope.eu
 
