@@ -253,20 +253,14 @@ if __name__ == "__main__":
     row2 = db.fetch_content_item_by_uid(('eayj634lmufeqr65fkcgymtcsgs',))
     rows = [row[0], row2[0]]
 
-    # print(combine_content_item_colums(row[0]))
-    # sys.exit(0)
-    rows = db.fetch_random_content_items(100)
+    rows = db.fetch_random_content_items(10)
     pprint(rows)
-    # XXX FIXME: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes . 
+    # XXX NOTE: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes . 
     # But it would be better to get them from the official source
     LANGUAGES =  ['de', 'en', 'pl', 'sl', 'fa', 'hu', 'es', 'ar', 'fr', 'ru', 'it', 'sv', 'sq', 'lt', 'bs', 'zh', 'tr', 'bg', 'ku', 'cs', 'hr', 'pt', 'az', 'no', 'da', 'et', 'el', 'so', 'sk', 'sr', 'nl', 'uk', 'ro', 'ca', 'lv', 'an', 'be', 'mk', 'fi', 'th', 'ce', 'am', 'is', 'cy', 'mC', 'rm', 'ur', 'si', 'he', 'ko', 'yi', 'tu', 'ja']
 
 
-    # pprint(rows)
-    
-
     logging.info("Starting to translate the content items")
-    print(10 * "\n")
     for row in tqdm(rows):
         for language in LANGUAGES:
             if language in row[9]:      # example: row[9] is {'de': {'value': 'text in German'}}
@@ -277,34 +271,45 @@ if __name__ == "__main__":
                 id = row[0]
                 url = row[11]
                 pubDate = str(row[3].date())
-                for language in LANGUAGES:
-                    if language in row[8]:
-                        title = row[8][language]['value']
-                    else:
-                        title = ''
-                pprint(f"{text=}, {src_language=}, {dst_language=}, {id=}, {url=}, {pubDate=}, {title=}")
-                print(f"{src_language=}")
-                print(f"{dst_language=}")
-                print(f"{text=}")
+                title = row[8]
+                parsed_title = ''
+                for _language in LANGUAGES:
+                    if _language in title and 'value' in title[_language]:
+                        parsed_title = cleanup_text(title[_language]['value'])
+                        break   # we found it
+                pprint(f"{text=}, {src_language=}, {dst_language=}, {id=}, {url=}, {pubDate=}, {parsed_title=}", indent=2)
+                # print(f"{src_language=}")
+                # print(f"{dst_language=}")
+                # print(f"{text=}")
                 if src_language != dst_language:
-                    dst_text = translate(src_text = text, dst_language=dst_language, _src_language=src_language)
-                    print(80*"=")
-                    print(f"ID: {id}, url: {url}")
-                    print(f"{text[0:20]=}")
-                    print(f"{type(text)=}")
-                    print(f"{dst_text=}")
-                    print(f"{type(dst_text)=}")
-                    print(80*"/")
+                    try:
+                        dst_text = translate(src_text = text, dst_language=dst_language, _src_language=src_language)
+                        """
+                        print(80*"=")
+                        print(f"ID: {id}, url: {url}")
+                        print(f"{text[0:20]=}")
+                        print(f"{type(text)=}")
+                        print(f"{dst_text=}")
+                        print(f"{type(dst_text)=}")
+                        print(80*"/")
+                        """
+                    except Exception as e:
+                        logging.error(f"Translation failed for {id}: {e}")
+                        logging.debug(f"Dump of the row: {row}")
+                        dst_text = None
+                        continue
+                    if not dst_text:
+                        logging.warning(f"Translation failed for {id}")
                 else:
-                    dst_text = ''
+                    dst_text = text
                     # now add the document to the vector database
                 collection.add(documents=[text, dst_text],
-                               metadatas=[{"title": title, "date": pubDate, "language": src_language, "url": url}, 
-                               {"title": title, "date": pubDate, "language": dst_language, "url": url}],
+                               metadatas=[{"title": parsed_title, "date": pubDate, "language": src_language, "url": url}, 
+                               {"title": parsed_title, "date": pubDate, "language": dst_language, "url": url}],
                                ids=[row[0], row[0]+"_en"])
                 # append the data to the pandas df_content_items
                 df2 = pd.DataFrame({"id": id, "url": url, 
-                                    "pubDate": pubDate, "title": title, "text": text, 
+                                    "pubDate": pubDate, "title": parsed_title, "text": text, 
                                     "dst_text": dst_text}, index=[0]) 
                 df_content_items = pd.concat([df_content_items, df2], ignore_index=True)
                 # df_content_items.loc[len(df_content_items)] = [id, url, pubDate, title, text, dst_text]
