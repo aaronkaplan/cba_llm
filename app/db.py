@@ -89,7 +89,7 @@ import psycopg
 from pydantic import BaseModel
 from tqdm import tqdm
 
-from app.misc import  convert_html_to_text, contains_html
+from app.misc import  convert_html_to_text, contains_html, cleanup_text
 from app.translation import translate
 
 __import__('pysqlite3')
@@ -239,8 +239,6 @@ def combine_content_item_colums(content_item: ContentItem) -> str:
 
 
 if __name__ == "__main__":
-
-
     chroma_client = chromadb.PersistentClient(path="./chroma.db")
     collection = chroma_client.get_or_create_collection(name="ContentItems")
     logging.info(f"{collection.count()=}")
@@ -257,7 +255,7 @@ if __name__ == "__main__":
 
     # print(combine_content_item_colums(row[0]))
     # sys.exit(0)
-    rows = db.fetch_random_content_items(10)
+    rows = db.fetch_random_content_items(100)
     pprint(rows)
     # XXX FIXME: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes . 
     # But it would be better to get them from the official source
@@ -273,6 +271,7 @@ if __name__ == "__main__":
         for language in LANGUAGES:
             if language in row[9]:      # example: row[9] is {'de': {'value': 'text in German'}}
                 text = combine_content_item_colums(row)
+                text = cleanup_text(text)
                 src_language = language
                 dst_language = 'en'
                 id = row[0]

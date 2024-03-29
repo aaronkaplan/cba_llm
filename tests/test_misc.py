@@ -1,6 +1,6 @@
 """Unit tests for the misc module."""
 
-from app.misc import convert_html_to_text, contains_html
+from app.misc import convert_html_to_text, contains_html, cleanup_text
 
 
 def test_convert_html_to_text():
@@ -17,3 +17,15 @@ def test_contains_html():
     text = "<p>This is a test</p>"
     result = contains_html(text)
     assert result 
+
+def test_cleanup_text():
+    """Test the cleanup_text function."""
+    text = r'This is a "test"'
+    result = cleanup_text(text)
+    assert result == r'This is a \"test\"'
+    text = r'This is a {test}'
+    result = cleanup_text(text)
+    assert result == r'This is a \{test\}'
+    text = r'This is a "test" and {another test}'
+    result = cleanup_text(text)
+    assert result == r'This is a \"test\" and \{another test\}'
