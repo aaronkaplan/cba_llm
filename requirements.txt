@@ -3,7 +3,6 @@ bs4
 chromadb
 fastapi
 googletrans
-huggingface-hub
 Jinja2
 langchain
 langchain-anthropic

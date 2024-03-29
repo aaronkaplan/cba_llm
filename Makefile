@@ -13,4 +13,4 @@ chromadb:
 clean:
 	rm -rf chroma.db
 	rm -f  content_items.xlsx
-
+	rm -f app/__pycache__

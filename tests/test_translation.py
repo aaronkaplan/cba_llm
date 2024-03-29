@@ -2,6 +2,7 @@
 
 from app.translation import translate
 
+
 def test_translate():
     """Test the translate function."""
     text = "Esto es una prueba"
