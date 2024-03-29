@@ -83,8 +83,6 @@ import sys
 from pprint import pprint
 from typing import List
 
-import chromadb
-
 from tqdm import tqdm
 import pandas as pd
 import psycopg
@@ -97,6 +95,7 @@ from app.translation import translate
 # see also https://stackoverflow.com/questions/77004853/chromadb-langchain-with-sentencetransformerembeddingfunction-throwing-sqlite3
 __import__('pysqlite3')
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+import chromadb     # noqa:
 
 
 class Concept(BaseModel):
@@ -260,7 +259,7 @@ if __name__ == "__main__":
     row2 = db.fetch_content_item_by_uid(('eayj634lmufeqr65fkcgymtcsgs',))
     rows = [row[0], row2[0]]
 
-    rows = db.fetch_random_content_items(10)
+    rows = db.fetch_random_content_items(1000)
     # pprint(rows)
     # XXX NOTE: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes .
     # But it would be better to get them from the official source

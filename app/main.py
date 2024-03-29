@@ -4,9 +4,11 @@
 import sys
 import logging
 
+from pprint import pprint
+
 from typing import List
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -43,6 +45,7 @@ class SearchResponse(BaseModel):
     date: str
     url: str
     title: str
+    language: str
     original_text: str
     dst_text: str
 
@@ -53,7 +56,7 @@ def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-def search_in_vectorsearch_db(text: str, count_answers: int = -1) -> List[SearchResponse]:
+def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[SearchResponse]:
     """Search in the vector search database using langchain and chromaDB.
 
     Arguments:
@@ -64,6 +67,51 @@ def search_in_vectorsearch_db(text: str, count_answers: int = -1) -> List[Search
     list[SearchResponse] -- the search results
     """
 
+    # first translate the text to english
+    try:
+        text = translate(text, dst_language="english")
+    except Exception as e:
+        logging.error(f"Translation failed: {e}")
+        raise HTTPException(status_code=500, detail="Translation failed")
+
+    # now search in the vector search database
+    results = []
+    try:
+        vs_results = collection.query(query_texts=[text], n_results=count_answers)
+        # pprint(vs_results)
+        print(f"{type(vs_results)=}")
+        print(f"{vs_results.keys()=}")
+        # vs_results.keys()=dict_keys(['ids', 'distances', 'metadatas', 'embeddings', 'documents', 'uris', 'data'])
+        ids = vs_results['ids'][0]
+        metadatas = vs_results['metadatas'][0]
+        documents = vs_results['documents'][0]
+        data = zip(ids, metadatas, documents)
+        # pprint(list(data))
+        # convert the vs_restults to the SearchResponse model
+        for d in data:
+            print(f"{type(d)=}")
+            pprint(d)
+            print(80 * "-")
+            sd = {}
+            _id = d[0]
+            metadata = d[1]
+            sd['date'] = metadata['date']
+            sd['url'] = metadata['url']
+            sd['title'] = metadata['title']
+            sd['language'] = metadata['language']
+            sd['original_text'] = "".join(d[2:])
+            sd['dst_text'] = sd['original_text']      # XXX FIXME: this is a placeholder
+            pprint(sd)
+            sr = SearchResponse(**sd)
+            results.append(sr)
+
+        return results
+    except Exception as e:
+        logging.error(f"Search failed: {e}")
+        raise e
+        raise HTTPException(status_code=500, detail="Search failed")
+
+    """
     # Simulate some search results , in reality this will go to a RAG system
     results = [
         {
@@ -82,6 +130,7 @@ def search_in_vectorsearch_db(text: str, count_answers: int = -1) -> List[Search
         }
     ]
 
+    """
     return results
 
 
