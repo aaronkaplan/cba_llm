@@ -1,0 +1,69 @@
+services:
+
+  # traefik reverse proxy
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Enable the access log in common format
+      - "--accesslog=true"
+      - "--accesslog.format=common"
+      # Define the HTTP entry point
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=aaron+letsencrypt@lo-res.org"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    # logging:
+    #  driver: syslog
+    #  options:
+    #    syslog-address: "tcp://${SYSLOG_SERVER}:${SYSLOG_PORT}"
+    #    tag: "traefik"
+    networks:
+      - web
+    labels:
+      - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.global.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.global.middlewares=redirect-https"
+      - "traefik.http.routers.global.entrypoints=web"
+
+  # The main microservice, serving the x-language-search.lo-res.org site
+  #
+  x-language-search:
+    image: x-language-search:${VERSION}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VERSION=${VERSION}
+    environment:
+      PYTHONPATH: /:/app
+    env_file: .env
+    ports:
+      - "9991:9991"
+    dns: 8.8.8.8
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.x-language-search.rule=Host(`x-language-search.lo-res.org`)"
+      - "traefik.http.routers.x-language-search.entrypoints=websecure"
+      - "traefik.http.routers.x-language-search.tls.certresolver=myresolver"
+      - "traefik.http.services.x-language-search.loadbalancer.server.port=9991"
+    #network_mode: host
+    volumes:
+      - ./app:/app
+      - ./chroma.db:/chroma.db
+    networks: 
+      - web
+
+networks:
+  web:
+    external: true
