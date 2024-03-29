@@ -2,6 +2,13 @@
     "python.linting.pycodestyleEnabled": true,
     "python.linting.enabled": true,
     "python.linting.pycodestyle.args": [
-        "--ignore=E501,W1203"
+        "Enable",
+        "--ignore=E501,W1203",
+        "--max-line-length=160"
+    ],
+    "pylint.args": [
+        "--Enabled",
+        "--disable=C0111,C0301,W1201,W1203", 
+        "--max-line-length=160"
     ]
 }

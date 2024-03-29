@@ -79,10 +79,11 @@ Concept
 
 import logging
 import sys
-import chromadb
 
 from pprint import pprint
 from typing import List
+
+import chromadb
 
 from tqdm import tqdm
 import pandas as pd
