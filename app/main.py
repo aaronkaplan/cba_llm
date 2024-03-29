@@ -42,6 +42,8 @@ except Exception as e:
 
 class SearchResponse(BaseModel):
     """Search response model."""
+    id: str
+    distance: float     # the distance of the search result
     date: str
     url: str
     title: str
@@ -56,7 +58,7 @@ def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[SearchResponse]:
+def search_in_vectorsearch_db(text: str, count_answers: int = 3) -> List[SearchResponse]:
     """Search in the vector search database using langchain and chromaDB.
 
     Arguments:
@@ -68,11 +70,11 @@ def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[Search
     """
 
     # first translate the text to english
-    try:
-        text = translate(text, dst_language="english")
-    except Exception as e:
-        logging.error(f"Translation failed: {e}")
-        raise HTTPException(status_code=500, detail="Translation failed")
+    # try:
+    #     text = translate(text, dst_language="english")
+    # except Exception as e:
+    #     logging.error(f"Translation failed: {e}")
+    #     raise HTTPException(status_code=500, detail="Translation failed")
 
     # now search in the vector search database
     results = []
@@ -83,9 +85,10 @@ def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[Search
         print(f"{vs_results.keys()=}")
         # vs_results.keys()=dict_keys(['ids', 'distances', 'metadatas', 'embeddings', 'documents', 'uris', 'data'])
         ids = vs_results['ids'][0]
+        distances = vs_results['distances'][0]
         metadatas = vs_results['metadatas'][0]
         documents = vs_results['documents'][0]
-        data = zip(ids, metadatas, documents)
+        data = zip(ids, distances, metadatas, documents)
         # pprint(list(data))
         # convert the vs_restults to the SearchResponse model
         for d in data:
@@ -93,13 +96,16 @@ def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[Search
             pprint(d)
             print(80 * "-")
             sd = {}
-            _id = d[0]
-            metadata = d[1]
+            id = d[0]
+            distance = d[1]
+            metadata = d[2]
+            sd['id'] = id
+            sd['distance'] = distance
             sd['date'] = metadata['date']
             sd['url'] = metadata['url']
             sd['title'] = metadata['title']
             sd['language'] = metadata['language']
-            sd['original_text'] = "".join(d[2:])
+            sd['original_text'] = "".join(d[3:])
             sd['dst_text'] = sd['original_text']      # XXX FIXME: this is a placeholder
             pprint(sd)
             sr = SearchResponse(**sd)
@@ -139,11 +145,12 @@ def search(query: str = Query(..., min_length=1)) -> List[SearchResponse]:
     # first detect the input language
     lang = detect(query)
     logging.info(f"Detected language: {lang}")
-    if lang != "en":
-        query = translate(query, dst_language="english")
-    logging.info(f"(Translated) query: {query}")
+    # if lang != "en":
+    #    query = translate(query, dst_language="english")
+    # logging.info(f"(Translated) query: {query}")
 
     # Simulate some search results , in reality this will go to a RAG system
     results = search_in_vectorsearch_db(query)
+    results = sorted(results, key=lambda x: x.distance, reverse=False)
 
     return results
