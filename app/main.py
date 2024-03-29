@@ -1,8 +1,8 @@
 """Main fastapi application."""
 
 
+import sys
 import logging
-import chromadb
 
 from typing import List
 
@@ -19,6 +19,13 @@ from app.translation import translate
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+# this is an ugly hack to make chromaDB work with the sqlite3 module
+# see also https://stackoverflow.com/questions/77004853/chromadb-langchain-with-sentencetransformerembeddingfunction-throwing-sqlite3
+__import__('pysqlite3')
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+import chromadb     # noqa:
+
 
 # try to load the chromaDB
 try:
