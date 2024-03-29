@@ -7,7 +7,7 @@ def convert_html_to_text(html_str: str) -> str:
     """Converts HTML to plain text.
     Args:
         html_str: The HTML string to convert.
-        
+
     Returns:
         The plain text.
     """
@@ -19,7 +19,7 @@ def contains_html(text: str) -> bool:
     """Checks if a string contains HTML.
     Args:
         text: The string to check.
-        
+
     Returns:
         True if the string contains HTML, False otherwise.
     """
@@ -27,13 +27,13 @@ def contains_html(text: str) -> bool:
 
 
 def cleanup_text(text: str) -> str:
-    """Clean up the text: 
+    """Clean up the text:
     - escape any " characters
     - escape any { and } characters
-    
+
     Args:
     text - the text to clean up
-    
+
     Returns:
     the cleaned up text
     """

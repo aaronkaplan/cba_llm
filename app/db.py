@@ -4,97 +4,99 @@ We have the following tables in the database which we want to interact with:
 
 repco=# \d "Transcript"
                Table "public.Transcript"
-    Column     | Type | Collation | Nullable | Default 
+    Column     | Type | Collation | Nullable | Default
 ---------------+------+-----------+----------+---------
- uid           | text |           | not null | 
- language      | text |           | not null | 
- text          | text |           | not null | 
- engine        | text |           | not null | 
- mediaAssetUid | text |           | not null | 
- author        | text |           | not null | 
- license       | text |           | not null | 
- revisionId    | text |           | not null | 
- subtitleUrl   | text |           | not null | 
+ uid           | text |           | not null |
+ language      | text |           | not null |
+ text          | text |           | not null |
+ engine        | text |           | not null |
+ mediaAssetUid | text |           | not null |
+ author        | text |           | not null |
+ license       | text |           | not null |
+ revisionId    | text |           | not null |
+ subtitleUrl   | text |           | not null |
 
  repco=# \d "ContentItem"
                                  Table "public.ContentItem"
-        Column         |              Type              | Collation | Nullable |   Default   
+        Column         |              Type              | Collation | Nullable |   Default
 -----------------------+--------------------------------+-----------+----------+-------------
- uid                   | text                           |           | not null | <-- 
- revisionId            | text                           |           | not null | 
- subtitle              | text                           |           |          | <-- 
- pubDate               | timestamp(3) without time zone |           |          | <-- 
- contentFormat         | text                           |           | not null | 
- primaryGroupingUid    | text                           |           |          | 
- licenseUid            | text                           |           |          | 
- publicationServiceUid | text                           |           |          | 
+ uid                   | text                           |           | not null | <--
+ revisionId            | text                           |           | not null |
+ subtitle              | text                           |           |          | <--
+ pubDate               | timestamp(3) without time zone |           |          | <--
+ contentFormat         | text                           |           | not null |
+ primaryGroupingUid    | text                           |           |          |
+ licenseUid            | text                           |           |          |
+ publicationServiceUid | text                           |           |          |
  title                 | jsonb                          |           | not null | '{}'::jsonb <--
- summary               | jsonb                          |           |          | 
+ summary               | jsonb                          |           |          |
  content               | jsonb                          |           | not null | '{}'::jsonb <--
  contentUrl            | text                           |           | not null |  <--
- originalLanguages     | jsonb                          |           |          | 
+ originalLanguages     | jsonb                          |           |          |
 
- 
- repco=# \d "ContentGrouping" 
+
+ repco=# \d "ContentGrouping"
                              Table "public.ContentGrouping"
-      Column       |              Type              | Collation | Nullable |   Default   
+      Column       |              Type              | Collation | Nullable |   Default
 -------------------+--------------------------------+-----------+----------+-------------
- uid               | text                           |           | not null | 
- revisionId        | text                           |           | not null | 
- broadcastSchedule | text                           |           |          | 
- groupingType      | text                           |           | not null | 
- startingDate      | timestamp(3) without time zone |           |          | 
- subtitle          | text                           |           |          | 
- terminationDate   | timestamp(3) without time zone |           |          | 
- licenseUid        | text                           |           |          | 
- variant           | "ContentGroupingVariant"       |           | not null | 
- description       | jsonb                          |           |          | 
- summary           | jsonb                          |           |          | 
+ uid               | text                           |           | not null |
+ revisionId        | text                           |           | not null |
+ broadcastSchedule | text                           |           |          |
+ groupingType      | text                           |           | not null |
+ startingDate      | timestamp(3) without time zone |           |          |
+ subtitle          | text                           |           |          |
+ terminationDate   | timestamp(3) without time zone |           |          |
+ licenseUid        | text                           |           |          |
+ variant           | "ContentGroupingVariant"       |           | not null |
+ description       | jsonb                          |           |          |
+ summary           | jsonb                          |           |          |
  title             | jsonb                          |           | not null | '{}'::jsonb
 Indexes:
 
-repco=# \d "Concept" 
+repco=# \d "Concept"
                          Table "public.Concept"
-       Column       |     Type      | Collation | Nullable |   Default   
+       Column       |     Type      | Collation | Nullable |   Default
 --------------------+---------------+-----------+----------+-------------
- uid                | text          |           | not null | 
- revisionId         | text          |           | not null | 
- originNamespace    | text          |           |          | 
- wikidataIdentifier | text          |           |          | 
- sameAsUid          | text          |           |          | 
- parentUid          | text          |           |          | 
- kind               | "ConceptKind" |           | not null | 
+ uid                | text          |           | not null |
+ revisionId         | text          |           | not null |
+ originNamespace    | text          |           |          |
+ wikidataIdentifier | text          |           |          |
+ sameAsUid          | text          |           |          |
+ parentUid          | text          |           |          |
+ kind               | "ConceptKind" |           | not null |
  name               | jsonb         |           | not null | '{}'::jsonb
- summary            | jsonb         |           |          | 
- description        | jsonb         |           |          | 
+ summary            | jsonb         |           |          |
+ description        | jsonb         |           |          |
 
- 
+
 We will create the following pydantic models to interact with the database:
 ContentItem
 Transcript
-ContentGrouping 
-Concept 
+ContentGrouping
+Concept
 
 """
 
-import sys
 import logging
+import sys
+import chromadb
 
-from typing import List
 from pprint import pprint
+from typing import List
 
+from tqdm import tqdm
 import pandas as pd
 import psycopg
-
 from pydantic import BaseModel
-from tqdm import tqdm
 
-from app.misc import  convert_html_to_text, contains_html, cleanup_text
+from app.misc import cleanup_text, convert_html_to_text
 from app.translation import translate
 
+# this is an ugly hack to make chromaDB work with the sqlite3 module
+# see also https://stackoverflow.com/questions/77004853/chromadb-langchain-with-sentencetransformerembeddingfunction-throwing-sqlite3
 __import__('pysqlite3')
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-import chromadb
+
 
 class Concept(BaseModel):
     """Pydantic model for the Concept table."""
@@ -108,6 +110,7 @@ class Concept(BaseModel):
     name: dict
     summary: dict
     description: dict
+
 
 class ContentGrouping(BaseModel):
     """Pydantic model for the ContentGrouping table."""
@@ -124,6 +127,7 @@ class ContentGrouping(BaseModel):
     summary: dict
     title: dict
 
+
 class Transcript(BaseModel):
     """Pydantic model for the Transcript table."""
     uid: str
@@ -135,6 +139,8 @@ class Transcript(BaseModel):
 
 CONTENTITEM_FIELDS = 'uid, "revisionId", subtitle, "pubDate", "contentFormat", "primaryGroupingUid", "licenseUid", "publicationServiceUid", title, summary, content, "contentUrl", "originalLanguages"'
 #                     0     1            2          3          4                5                     6             7                       8      9        10        11            12
+
+
 class ContentItem(BaseModel):
     """Pydantic model for the ContentItem table."""
     uid: str
@@ -154,6 +160,7 @@ class ContentItem(BaseModel):
 
 class DB():
     """Slim wrapper around psycopg."""
+
     def __init__(self):
         self.conn = self.connect_to_db()
         self.cursor = self.conn.cursor()
@@ -214,10 +221,9 @@ class DB():
         return df
 
 
-
 def combine_content_item_colums(content_item: ContentItem) -> str:
     """Combine the columns of a content item into a single string.
-    This combines the title, subtitle, summary, and content columns into a single string and 
+    This combines the title, subtitle, summary, and content columns into a single string and
     cleans it up (html tags get removed).
 
     Example input:
@@ -228,7 +234,7 @@ def combine_content_item_colums(content_item: ContentItem) -> str:
     """
     combined = ""
     # for key in ['title', 'subtitle', 'summary', 'content']:       # FIXME: subtitle needs to be cleaned up in the DB
-    for key in [8,9,10]:        # pretty unelegant, but it works
+    for key in [8, 9, 10]:        # pretty unelegant, but it works
         for language in content_item[key]:
             if 'value' not in content_item[key][language]:
                 continue
@@ -254,11 +260,11 @@ if __name__ == "__main__":
     rows = [row[0], row2[0]]
 
     rows = db.fetch_random_content_items(10)
-    pprint(rows)
-    # XXX NOTE: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes . 
+    # pprint(rows)
+    # XXX NOTE: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes .
     # But it would be better to get them from the official source
-    LANGUAGES =  ['de', 'en', 'pl', 'sl', 'fa', 'hu', 'es', 'ar', 'fr', 'ru', 'it', 'sv', 'sq', 'lt', 'bs', 'zh', 'tr', 'bg', 'ku', 'cs', 'hr', 'pt', 'az', 'no', 'da', 'et', 'el', 'so', 'sk', 'sr', 'nl', 'uk', 'ro', 'ca', 'lv', 'an', 'be', 'mk', 'fi', 'th', 'ce', 'am', 'is', 'cy', 'mC', 'rm', 'ur', 'si', 'he', 'ko', 'yi', 'tu', 'ja']
-
+    LANGUAGES = ['de', 'en', 'pl', 'sl', 'fa', 'hu', 'es', 'ar', 'fr', 'ru', 'it', 'sv', 'sq', 'lt', 'bs', 'zh', 'tr', 'bg', 'ku', 'cs', 'hr', 'pt', 'az', 'no', 'da', 'et',
+                 'el', 'so', 'sk', 'sr', 'nl', 'uk', 'ro', 'ca', 'lv', 'an', 'be', 'mk', 'fi', 'th', 'ce', 'am', 'is', 'cy', 'mC', 'rm', 'ur', 'si', 'he', 'ko', 'yi', 'tu', 'ja']
 
     logging.info("Starting to translate the content items")
     for row in tqdm(rows):
@@ -268,58 +274,39 @@ if __name__ == "__main__":
                 text = cleanup_text(text)
                 src_language = language
                 dst_language = 'en'
-                id = row[0]
+                id = row[0]             # pylint: disable=redifined-builtin
                 url = row[11]
                 pubDate = str(row[3].date())
                 title = row[8]
-                parsed_title = ''
-                for _language in LANGUAGES:
+                parsed_title = ''       # pylint: disable=invalid-name
+                for _language in LANGUAGES:     # FIXME: this should be more elegant
                     if _language in title and 'value' in title[_language]:
                         parsed_title = cleanup_text(title[_language]['value'])
                         break   # we found it
                 pprint(f"{text=}, {src_language=}, {dst_language=}, {id=}, {url=}, {pubDate=}, {parsed_title=}", indent=2)
-                # print(f"{src_language=}")
-                # print(f"{dst_language=}")
-                # print(f"{text=}")
                 if src_language != dst_language:
                     try:
-                        dst_text = translate(src_text = text, dst_language=dst_language, _src_language=src_language)
-                        """
-                        print(80*"=")
-                        print(f"ID: {id}, url: {url}")
-                        print(f"{text[0:20]=}")
-                        print(f"{type(text)=}")
-                        print(f"{dst_text=}")
-                        print(f"{type(dst_text)=}")
-                        print(80*"/")
-                        """
+                        dst_text = translate(src_text=text, dst_language=dst_language, _src_language=src_language)
                     except Exception as e:
                         logging.error(f"Translation failed for {id}: {e}")
                         logging.debug(f"Dump of the row: {row}")
                         dst_text = None
                         continue
                     if not dst_text:
-                        logging.warning(f"Translation failed for {id}")
+                        logging.warning("Translation failed for ID %s" % id)
                 else:
                     dst_text = text
                     # now add the document to the vector database
                 collection.add(documents=[text, dst_text],
-                               metadatas=[{"title": parsed_title, "date": pubDate, "language": src_language, "url": url}, 
-                               {"title": parsed_title, "date": pubDate, "language": dst_language, "url": url}],
-                               ids=[row[0], row[0]+"_en"])
+                               metadatas=[{"title": parsed_title, "date": pubDate, "language": src_language, "url": url},
+                                          {"title": parsed_title, "date": pubDate, "language": dst_language, "url": url}
+                                          ],
+                               ids=[row[0], row[0] + "_en"])
                 # append the data to the pandas df_content_items
-                df2 = pd.DataFrame({"id": id, "url": url, 
-                                    "pubDate": pubDate, "title": parsed_title, "text": text, 
-                                    "dst_text": dst_text}, index=[0]) 
+                df2 = pd.DataFrame({"id": id, "url": url,
+                                    "pubDate": pubDate, "title": parsed_title, "text": text,
+                                    "dst_text": dst_text}, index=[0])
                 df_content_items = pd.concat([df_content_items, df2], ignore_index=True)
-                # df_content_items.loc[len(df_content_items)] = [id, url, pubDate, title, text, dst_text]
-                """
-                df_content_items = df_content_items.append({"id": id, "url": url, 
-                                                            "pubDate": pubDate, "title": title, 
-                                                            "text": text, 
-                                                            "dst_text": dst_text}, 
-                                                            ignore_index=True)
-                """
                 break
     db.close()
 
@@ -327,4 +314,3 @@ if __name__ == "__main__":
     df_content_items.to_excel("content_items.xlsx", index=False)
     print("Data written to content_items.xksx")
     print(df_content_items.head())
-

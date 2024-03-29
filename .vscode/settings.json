@@ -1,0 +1,7 @@
+{
+    "python.linting.pycodestyleEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.pycodestyle.args": [
+        "--ignore=E501,W1203"
+    ]
+}

@@ -1,23 +1,35 @@
 """Main fastapi application."""
 
 
-from datetime import datetime
+import logging
+import chromadb
 
-from fastapi import FastAPI
-from fastapi import Query, Request
+from typing import List
+
+from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from langdetect import \
+    detect  # https://www.geeksforgeeks.org/detect-an-unknown-language-using-python/
 from pydantic import BaseModel
 
-from langdetect import detect   # https://www.geeksforgeeks.org/detect-an-unknown-language-using-python/
-
 from app.translation import translate
-
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+# try to load the chromaDB
+try:
+    chroma_client = chromadb.PersistentClient(path="./chroma.db")
+    collection = chroma_client.get_or_create_collection(name="ContentItems")
+    logging.info("ChromaDB loaded")
+    logging.info(f"{collection.count()=}")
+except Exception as e:
+    logging.error(f"Failed to load ChromaDB: {e}")
+    raise e
+
 
 class SearchResponse(BaseModel):
     """Search response model."""
@@ -34,9 +46,9 @@ def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-def search_in_vectorsearchDB(text: str, count_answers: int = -1) -> list[SearchResponse]:
+def search_in_vectorsearch_db(text: str, count_answers: int = -1) -> List[SearchResponse]:
     """Search in the vector search database using langchain and chromaDB.
-    
+
     Arguments:
     text -- the text to search for
     count_answers -- the number of answers to return. -1 means all
@@ -66,22 +78,16 @@ def search_in_vectorsearchDB(text: str, count_answers: int = -1) -> list[SearchR
     return results
 
 
-@app.get("/search", response_model=list[SearchResponse])
-def search(query: str = Query(..., min_length=1)) -> list[SearchResponse]:
+@app.get("/search", response_model=List[SearchResponse])
+def search(query: str = Query(..., min_length=1)) -> List[SearchResponse]:
     # first detect the input language
     lang = detect(query)
-    print(f"Detected language: {lang}")
+    logging.info(f"Detected language: {lang}")
     if lang != "en":
         query = translate(query, dst_language="english")
-    print(f"(Translated) query: {query}")
+    logging.info(f"(Translated) query: {query}")
 
     # Simulate some search results , in reality this will go to a RAG system
-    results = search_in_vectorsearchDB(query)
-
-    # Translate the results using the Google Translate API
-    # translator = Translator()
-    # for result in results:
-    #     print(result["original_text"])
-    #     result["dst_text"] = translator.translate(result["original_text"], dest="es").text
+    results = search_in_vectorsearch_db(query)
 
     return results

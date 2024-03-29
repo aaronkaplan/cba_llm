@@ -12,12 +12,13 @@ from langchain_core.output_parsers import JsonOutputParser
 
 from langchain_anthropic import ChatAnthropic
 
+
 class Translation(BaseModel):
     """Pydantic class to represent a translation result."""
-    src_text: str =  Field(description="The original text to translate")
+    src_text: str = Field(description="The original text to translate")
     dst_text: str = Field(description="The translated text")
     src_language: str = Field(description="The original language of the text", required=False)
-    dst_language:  str = Field(description="The language the text was translated to", required=False)
+    dst_language: str = Field(description="The language the text was translated to", required=False)
 
     def __init__(self, data):
         super().__init__(**data)
@@ -26,22 +27,28 @@ class Translation(BaseModel):
         if 'dst_language' not in data:
             self.dst_language = "en"        # safe assumption
 
+    def __str__(self):
+        return f"Translation(src_text='{self.src_text}', dst_text='{self.dst_text}', src_language='{self.src_language}', dst_language='{self.dst_language}')"
+
+    def __repr__(self):
+        return self.__str__()
+
+
 def translate(src_text: str, dst_language: str = 'english', _src_language: str = None) -> str:
     """Translate a string to the reference language (english)
 
-    Arguments:
-    src_text -- the string to translate
-    dst_language -- the destination language (default 'english')
+    Args:
+      src_text -- the string to translate
+      dst_language -- the destination language (default 'english')
 
     Returns:
-    str -- the translated string
+      str -- the translated string
     """
 
-
-    # first initialize the connectoin to  the llm 
+    # first initialize the connectoin to  the llm
     if os.getenv('LLM_PROVIDER').lower() == 'openai':
         logging.info("Using OpenAI")
-        model = ChatOpenAI(model='gpt-3.5-turbo', temperature=0 )
+        model = ChatOpenAI(model='gpt-3.5-turbo', temperature=0)
         # model = model.with_structured_output(schema=Translation, method="json_mode")      # this is currently broken in langchain 0.1.13
     elif os.getenv('LLM_PROVIDER').lower() == 'anthropic':
         logging.info("Using Claude (Anthropic)")
@@ -55,7 +62,7 @@ def translate(src_text: str, dst_language: str = 'english', _src_language: str =
     # ... here we could make another prompt which detect the input language
     # and then it might be safer to use the right language model. --> Later
     #   example: input_language = "spanish"
-    # then we will also have to adjust the prompt again to contain {input_language} 
+    # then we will also have to adjust the prompt again to contain {input_language}
 
     # nowfirst get the right prompt
     prompt = hub.pull("aaronkaplan/basic_translation")
@@ -69,12 +76,13 @@ def translate(src_text: str, dst_language: str = 'english', _src_language: str =
 
     try:
         translation = Translation({'src_text': src_text,
-                                'dst_text': result['dst_text'], 
-                                'src_language': result['src_language'],
-                                'dst_language': dst_language})
+                                   'dst_text': result['dst_text'],
+                                   'src_language': result['src_language'],
+                                   'dst_language': dst_language
+                                   })
     except Exception as e:
-        logging.error(f"Translation failed: {e}")
-        logging.error(f"LLM result: {result}")
+        logging.error("Translation failed: %s" % str(e))
+        logging.error("LLM result: %s" % result)
         raise e
     return translation.dst_text
 
