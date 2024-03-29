@@ -145,9 +145,9 @@ def search(query: str = Query(..., min_length=1)) -> List[SearchResponse]:
     # first detect the input language
     lang = detect(query)
     logging.info(f"Detected language: {lang}")
-    # if lang != "en":
-    #    query = translate(query, dst_language="english")
-    # logging.info(f"(Translated) query: {query}")
+    if lang != "en":
+        query = translate(query, dst_language="english")
+    logging.info(f"(Translated) query: {query}")
 
     # Simulate some search results , in reality this will go to a RAG system
     results = search_in_vectorsearch_db(query)
