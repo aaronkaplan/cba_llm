@@ -194,7 +194,7 @@ class DB():
         sql = 'SELECT content FROM "ContentItem" WHERE uid = %s'
         result = self.query(sql, (uid,))
         return result[0][0]
-    
+
     def fetch_all_content_items(self, limit: int = 0) -> List[ContentItem]:
         """Fetch all content items."""
         if limit > 0:
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     row2 = db.fetch_content_item_by_uid(('eayj634lmufeqr65fkcgymtcsgs',))
     rows = [row[0], row2[0]]
 
-    rows = db.fetch_random_content_items(500)
+    rows = db.fetch_random_content_items(4500)
     # pprint(rows)
     # XXX NOTE: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes .
     # But it would be better to get them from the official source
@@ -303,7 +303,7 @@ if __name__ == "__main__":
                 else:
                     dst_text = text
                     # now add the document to the vector database
-                
+
                 # now we split the text into sentences and add them to the vector database
                 # split by \n
                 sentences = dst_text.split("\n")    # might want to explore other chunking methods here
