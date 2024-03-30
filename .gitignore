@@ -164,3 +164,4 @@ chroma.db/*
 *.xlsx
 scratch/
 letsencrypt/
+requirements.txt.old
