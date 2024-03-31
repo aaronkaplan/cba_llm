@@ -79,6 +79,7 @@ Concept
 
 import logging
 import sys
+import os
 
 from pprint import pprint
 from typing import List
@@ -96,6 +97,10 @@ from app.translation import translate
 __import__('pysqlite3')
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import chromadb     # noqa:
+
+# Postgresql stuff for the repco database
+DEFAULT_DSN = "dbname=repco user=repco password=repco host=localhost"
+DSN = os.getenv("DSN", DEFAULT_DSN)
 
 
 class Concept(BaseModel):
@@ -176,12 +181,8 @@ class DB():
 
     def connect_to_db(self):
         """Connect to the database."""
-        conn = psycopg.connect(
-            dbname='repco',
-            user='repco',
-            password='repco',
-            host='localhost',
-        )
+        conn = psycopg.connect(conninfo=DSN)
+        
         return conn
 
     def fetch_content_item_by_uid(self, uid) -> ContentItem:
