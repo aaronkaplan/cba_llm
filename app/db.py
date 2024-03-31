@@ -181,8 +181,11 @@ class DB():
 
     def connect_to_db(self):
         """Connect to the database."""
-        conn = psycopg.connect(conninfo=DSN)
-        
+        try:
+            conn = psycopg.connect(conninfo=DSN)
+        except psycopg.Error as e:
+            logging.error(f"Error connecting to the database: {e}")
+            sys.exit(1)
         return conn
 
     def fetch_content_item_by_uid(self, uid) -> ContentItem:
@@ -194,6 +197,9 @@ class DB():
         """Fetch the content of a content item by its uid."""
         sql = 'SELECT content FROM "ContentItem" WHERE uid = %s'
         result = self.query(sql, (uid,))
+        if not result:
+            logging.warning(f"Content item with uid {uid} not found.")
+            return ""
         return result[0][0]
 
     def fetch_all_content_items(self, limit: int = 0) -> List[ContentItem]:
