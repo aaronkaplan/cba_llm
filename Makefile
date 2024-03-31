@@ -11,6 +11,11 @@ all:	app/*.py tests/*.py requirements.txt Dockerfile docker-compose.yml
 	docker build -t $(IMAGE):$(VERSION) . --network=host && docker compose down && docker compose  --env-file .env up -d
 
 
+docker-build:	app/*.py tests/*.py requirements.txt Dockerfile docker-compose.yml
+	@echo "Building $(IMAGE):$(VERSION)"
+	docker build -t $(IMAGE):$(VERSION) . --network=host 
+
+
 restart:
 	docker compose down && docker compose  --env-file .env up -d
 
