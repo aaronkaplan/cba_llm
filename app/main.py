@@ -5,8 +5,8 @@ import sys
 import logging
 
 from pprint import pprint
-
 from typing import List
+import pandas as pd
 
 from fastapi import FastAPI, Query, Request, HTTPException
 from fastapi.responses import HTMLResponse
@@ -17,10 +17,15 @@ from langdetect import \
 from pydantic import BaseModel
 
 from app.translation import translate
+from app.db import DB
+
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+# a handle for the postgresql repco DB
+db = DB()
 
 # this is an ugly hack to make chromaDB work with the sqlite3 module
 # see also https://stackoverflow.com/questions/77004853/chromadb-langchain-with-sentencetransformerembeddingfunction-throwing-sqlite3
@@ -58,7 +63,7 @@ def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-def search_in_vectorsearch_db(text: str, count_answers: int = 3) -> List[SearchResponse]:
+def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[SearchResponse]:
     """Search in the vector search database using langchain and chromaDB.
 
     Arguments:
@@ -69,14 +74,7 @@ def search_in_vectorsearch_db(text: str, count_answers: int = 3) -> List[SearchR
     list[SearchResponse] -- the search results
     """
 
-    # first translate the text to english
-    # try:
-    #     text = translate(text, dst_language="english")
-    # except Exception as e:
-    #     logging.error(f"Translation failed: {e}")
-    #     raise HTTPException(status_code=500, detail="Translation failed")
-
-    # now search in the vector search database
+    # search in the vector search database
     results = []
     try:
         vs_results = collection.query(query_texts=[text], n_results=count_answers)
@@ -95,21 +93,44 @@ def search_in_vectorsearch_db(text: str, count_answers: int = 3) -> List[SearchR
             print(f"{type(d)=}")
             pprint(d)
             print(80 * "-")
-            sd = {}
+            search_dict = {}
             id = d[0]
             distance = d[1]
             metadata = d[2]
-            sd['id'] = id
-            sd['distance'] = distance
-            sd['date'] = metadata['date']
-            sd['url'] = metadata['url']
-            sd['title'] = metadata['title']
-            sd['language'] = metadata['language']
-            sd['original_text'] = "".join(d[3:])
-            sd['dst_text'] = sd['original_text']      # XXX FIXME: this is a placeholder
-            pprint(sd)
-            sr = SearchResponse(**sd)
+            search_dict['id'] = id
+            search_dict['distance'] = distance
+            search_dict['date'] = metadata['date']
+            search_dict['url'] = metadata['url']
+            search_dict['title'] = metadata['title']
+            search_dict['language'] = metadata['language']
+            search_dict['dst_text'] = "".join(d[3:])
+            row = db.fetch_content_item_content_by_uid(id)
+            # next, find out the language in the row dict (['de'], 'en', etc.), so that we can access ['value']
+            lang = search_dict['language']
+            if lang in row:
+                val = row[lang]['value']
+            else:
+                _l = list(row.keys())
+                if len(_l) > 0:
+                    lang = _l[0]
+                    val = row[lang]['value']
+            print(120 * "=")
+            print(f"{val=}")
+            print(120 * "=")
+            search_dict['original_text'] = val
+            pprint(search_dict)
+            # convert to pandas dataframe
+            sd_df = pd.DataFrame(search_dict, index=[0])
+            pd.concat([sd_df, pd.DataFrame([search_dict])], ignore_index=True)
+            sr = SearchResponse(**search_dict)
             results.append(sr)
+
+        """
+        # now after we collected all search_dicts in a pandas dataframe, we will group by id and select the best match according to the minimum distance
+        results = []
+        for id in sd_df['id'].unique():
+            search_dict = sd_df[sd_df['id'] == id].sort_values(by='distance').iloc[0].to_dict()
+        """
 
         return results
     except Exception as e:

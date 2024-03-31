@@ -79,6 +79,7 @@ Concept
 
 import logging
 import sys
+import os
 
 from pprint import pprint
 from typing import List
@@ -96,6 +97,10 @@ from app.translation import translate
 __import__('pysqlite3')
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import chromadb     # noqa:
+
+# Postgresql stuff for the repco database
+DEFAULT_DSN = "dbname=repco user=repco password=repco host=localhost"
+DSN = os.getenv("DSN", DEFAULT_DSN)
 
 
 class Concept(BaseModel):
@@ -176,18 +181,26 @@ class DB():
 
     def connect_to_db(self):
         """Connect to the database."""
-        conn = psycopg.connect(
-            dbname='repco',
-            user='repco',
-            password='repco',
-            host='localhost',
-        )
+        try:
+            conn = psycopg.connect(conninfo=DSN)
+        except psycopg.Error as e:
+            logging.error(f"Error connecting to the database: {e}")
+            sys.exit(1)
         return conn
 
     def fetch_content_item_by_uid(self, uid) -> ContentItem:
         """Fetch a content item by its uid."""
         sql = f'SELECT {CONTENTITEM_FIELDS} FROM "ContentItem" WHERE uid = %s'
         return self.query(sql, uid)
+
+    def fetch_content_item_content_by_uid(self, uid: str) -> str:
+        """Fetch the content of a content item by its uid."""
+        sql = 'SELECT content FROM "ContentItem" WHERE uid = %s'
+        result = self.query(sql, (uid,))
+        if not result:
+            logging.warning(f"Content item with uid {uid} not found.")
+            return ""
+        return result[0][0]
 
     def fetch_all_content_items(self, limit: int = 0) -> List[ContentItem]:
         """Fetch all content items."""
@@ -259,7 +272,7 @@ if __name__ == "__main__":
     row2 = db.fetch_content_item_by_uid(('eayj634lmufeqr65fkcgymtcsgs',))
     rows = [row[0], row2[0]]
 
-    rows = db.fetch_random_content_items(1000)
+    rows = db.fetch_random_content_items(4500)
     # pprint(rows)
     # XXX NOTE: this is a list of https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes .
     # But it would be better to get them from the official source
@@ -297,12 +310,19 @@ if __name__ == "__main__":
                 else:
                     dst_text = text
                     # now add the document to the vector database
-                collection.add(documents=[text, dst_text],
-                               metadatas=[{"title": parsed_title, "date": pubDate, "language": src_language, "url": url},
-                                          {"title": parsed_title, "date": pubDate, "language": dst_language, "url": url}
-                                          ],
-                               ids=[row[0], row[0] + "_en"])
-                # append the data to the pandas df_content_items
+
+                # now we split the text into sentences and add them to the vector database
+                # split by \n
+                sentences = dst_text.split("\n")    # might want to explore other chunking methods here
+                for sentence in sentences:
+                    sentence = sentence.strip()
+                    if not sentence:
+                        continue
+                    print(f"Adding sentence: {sentence}")
+                    collection.add(documents=[sentence],
+                                   metadatas=[{"title": parsed_title, "date": pubDate, "language": src_language, "url": url}],
+                                   ids=[row[0]])
+                # append the whole row (translated & original) to the pandas df_content_items
                 df2 = pd.DataFrame({"id": id, "url": url,
                                     "pubDate": pubDate, "title": parsed_title, "text": text,
                                     "dst_text": dst_text}, index=[0])
