@@ -74,7 +74,7 @@
             articles.forEach(article => {
                 const articleItem = document.createElement('li');
                 articleItem.innerHTML = `
-                    <p><font size=-2>(${article.date})</font></p>
+                    <p><font size=-2>(${article.date}) | (distance: ${article.distance.toFixed(2)})</font></p>
                     <p><strong><font size=+1><a href="${article.url}">${article.title}</a></font></strong></p>
                     <p>&nbsp;</p>
                     <p><i>Original:</i></p>
