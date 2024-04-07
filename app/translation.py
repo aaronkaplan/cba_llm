@@ -90,7 +90,7 @@ def translate(src_text: str, dst_language: str = 'english', _src_language: str =
     return translation.dst_text
 
 
-def translate_via_deepl(src_text: str, dst_language: str = 'english', _src_language: str = None) -> str:
+def translate_via_deepl(src_text: str, dst_language: str = 'EN-US', _src_language: str = None) -> str:
     """Translate a string to to the dst_language using DeepL
 
     Args:
@@ -104,9 +104,14 @@ def translate_via_deepl(src_text: str, dst_language: str = 'english', _src_langu
     if not deepl_api_key:
         raise ValueError("DEEPL_API_KEY not set")
 
+    # XXX FIXME: DeepL is a bit picky w.r.t to the target_lang parameter.
+    #  It seems to require the language code in uppercase, 
+    # and in addition, only certain values for target_lang are accepted.
+    # see https://www.deepl.com/docs-api/translating-text/?utm_source=github&utm_medium=github-python-readme
+    # so we will have to make a mapping here.
     try:
         translator = deepl.Translator(deepl_api_key)
-        result = translator.translate_text(src_text, target_lang=dst_language)
+        result = translator.translate_text(src_text, target_lang=dst_language.upper())
         return result.text
     except Exception as e:
         logging.error("Translation failed: %s" % str(e))
@@ -116,4 +121,4 @@ def translate_via_deepl(src_text: str, dst_language: str = 'english', _src_langu
 if __name__ == "__main__":
     print(translate("Esto es una prueba 1", dst_language="english"))
     print("Using DeepL...")
-    print(translate_via_deepl("Esto es una prueba 2", dst_language="english"))
+    print(translate_via_deepl("Esto es una prueba 2"))
