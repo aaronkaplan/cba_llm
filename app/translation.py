@@ -5,12 +5,15 @@
 import os
 import logging
 
+import deepl
+
 from langchain import hub
 from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.output_parsers import JsonOutputParser
 
 from langchain_anthropic import ChatAnthropic
+
 
 
 class Translation(BaseModel):
@@ -87,5 +90,30 @@ def translate(src_text: str, dst_language: str = 'english', _src_language: str =
     return translation.dst_text
 
 
+def translate_via_deepl(src_text: str, dst_language: str = 'english', _src_language: str = None) -> str:
+    """Translate a string to to the dst_language using DeepL
+
+    Args:
+      src_text -- the string to translate
+      dst_language -- the destination language (default 'english')
+
+    Returns:
+      str -- the translated string
+    """
+    deepl_api_key = os.getenv("DEEPL_API_KEY", '')
+    if not deepl_api_key:
+        raise ValueError("DEEPL_API_KEY not set")
+
+    try:
+        translator = deepl.Translator(deepl_api_key)
+        result = translator.translate_text(src_text, target_lang=dst_language)
+        return result.text
+    except Exception as e:
+        logging.error("Translation failed: %s" % str(e))
+        raise e
+
+
 if __name__ == "__main__":
-    print(translate("Esto es una prueba", dst_language="english"))
+    print(translate("Esto es una prueba 1", dst_language="english"))
+    print("Using DeepL...")
+    print(translate_via_deepl("Esto es una prueba 2", dst_language="english"))
