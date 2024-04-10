@@ -16,7 +16,7 @@ from langdetect import \
     detect  # https://www.geeksforgeeks.org/detect-an-unknown-language-using-python/
 from pydantic import BaseModel
 
-from app.translation import translate
+from app.translation import translate, translate_via_deepl
 from app.db import DB
 
 
@@ -74,10 +74,21 @@ def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[Search
     list[SearchResponse] -- the search results
     """
 
+    print(f"{text=}")
+    # first detect the input language
+    query_lang = detect(text)
+    logging.info(f"Detected language: {query_lang}")
+    if query_lang != "en":
+        query = translate(text, dst_language="EN-US")
+        logging.info(f"(Translated) query: {query}")
+    else:
+        query = text
+
+    # Simulate some search results , in reality this will go to a RAG system
     # search in the vector search database
     results = []
     try:
-        vs_results = collection.query(query_texts=[text], n_results=count_answers)
+        vs_results = collection.query(query_texts=[query], n_results=count_answers)
         # pprint(vs_results)
         print(f"{type(vs_results)=}")
         print(f"{vs_results.keys()=}")
@@ -118,7 +129,10 @@ def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[Search
             print(f"{val=}")
             print(120 * "=")
             search_dict['original_text'] = val
-            pprint(search_dict)
+            if val:
+                translated_to_query_lang = translate_via_deepl(val, dst_language=query_lang.upper())
+                search_dict['dst_text'] = translated_to_query_lang
+                pprint(search_dict)
             # convert to pandas dataframe
             sd_df = pd.DataFrame(search_dict, index=[0])
             pd.concat([sd_df, pd.DataFrame([search_dict])], ignore_index=True)
@@ -163,14 +177,7 @@ def search_in_vectorsearch_db(text: str, count_answers: int = 10) -> List[Search
 
 @app.get("/search", response_model=List[SearchResponse])
 def search(query: str = Query(..., min_length=1)) -> List[SearchResponse]:
-    # first detect the input language
-    lang = detect(query)
-    logging.info(f"Detected language: {lang}")
-    if lang != "en":
-        query = translate(query, dst_language="english")
-    logging.info(f"(Translated) query: {query}")
 
-    # Simulate some search results , in reality this will go to a RAG system
     results = search_in_vectorsearch_db(query)
     results = sorted(results, key=lambda x: x.distance, reverse=False)
 

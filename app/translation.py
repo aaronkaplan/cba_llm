@@ -15,7 +15,6 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_anthropic import ChatAnthropic
 
 
-
 class Translation(BaseModel):
     """Pydantic class to represent a translation result."""
     src_text: str = Field(description="The original text to translate")
@@ -105,10 +104,12 @@ def translate_via_deepl(src_text: str, dst_language: str = 'EN-US', _src_languag
         raise ValueError("DEEPL_API_KEY not set")
 
     # XXX FIXME: DeepL is a bit picky w.r.t to the target_lang parameter.
-    #  It seems to require the language code in uppercase, 
+    #  It seems to require the language code in uppercase
     # and in addition, only certain values for target_lang are accepted.
     # see https://www.deepl.com/docs-api/translating-text/?utm_source=github&utm_medium=github-python-readme
     # so we will have to make a mapping here.
+    if dst_language.lower() == 'english' or dst_language.upper() == 'EN':
+        dst_language = 'EN-US'
     try:
         translator = deepl.Translator(deepl_api_key)
         result = translator.translate_text(src_text, target_lang=dst_language.upper())
