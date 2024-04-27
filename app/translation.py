@@ -115,8 +115,8 @@ def translate_via_deepl(src_text: str, dst_language: str = 'EN-US', _src_languag
         result = translator.translate_text(src_text, target_lang=dst_language.upper())
         return result.text
     except Exception as e:
-        logging.error("Translation failed: %s" % str(e))
-        raise e
+        logging.error("Translation failed (dst_language: %s): %s" % (dst_language, str(e)))
+        return ""
 
 
 if __name__ == "__main__":
